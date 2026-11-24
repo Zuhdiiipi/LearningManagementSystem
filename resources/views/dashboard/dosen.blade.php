@@ -14,7 +14,7 @@
 
   <div class="m-head-row">
     <h2>Kelas Saya</h2>
-    {{-- <a href="{{ route('dosen.kelas.create') }}" class="m-btn yellow"><i class="fa-solid fa-plus"></i> Buat Kelas</a> --}}
+    <a href="{{ route('dosen.kelas.create') }}" class="m-btn yellow"><i class="fa-solid fa-plus"></i> Buat Kelas</a>
   </div>
 
   <div class="m-grid">
@@ -22,20 +22,20 @@
       <div class="m-class-wrap">
         {{-- Menu titik tiga: ubah / hapus kelas --}}
         <details class="m-more">
-          <summary title="Pilihan"><i class="fa-solid fa-ellipsis-vertical"></i><span class="sr">Pilihan</span></summary>
+          {{-- <summary title="Pilihan"><i class="fa-solid fa-ellipsis-vertical"></i><span class="sr">Pilihan</span></summary> --}}
           <div>
-            {{-- <a href="{{ route('dosen.kelas.edit', $k) }}"><i class="fa-solid fa-pen"></i> Ubah Kelas</a> --}}
-            {{-- <form method="POST" action="{{ route('dosen.kelas.destroy', $k) }}" onsubmit="return confirm('Hapus kelas {{ $k->mataKuliah->nama }}? Semua materi, tugas, quiz, dan nilai di kelas ini ikut terhapus.')">
+            <a href="{{ route('dosen.kelas.edit', $k) }}"><i class="fa-solid fa-pen"></i> Ubah Kelas</a> 
+            <form method="POST" action="{{ route('dosen.kelas.destroy', $k) }}" onsubmit="return confirm('Hapus kelas {{ $k->mataKuliah->nama }}? Semua materi, tugas, quiz, dan nilai di kelas ini ikut terhapus.')"> 
               @csrf @method('DELETE')
               <button><i class="fa-solid fa-trash"></i> Hapus Kelas</button>
-            </form> --}}
+            </form>
           </div>
         </details>
-        {{-- <a href="{{ route('dosen.kelas.show', $k) }}" class="m-class"> --}}
+        <a href="{{ route('dosen.kelas.show', $k) }}" class="m-class">
           <div class="atas">
             <h3>{{ $k->mataKuliah->nama }} @if ($k->status === 'draft')<span class="draft">Draft</span>@endif</h3>
             <small>{{ $k->dosen->name }} · {{ $k->nama }}</small>
-            {{-- @include('mahasiswa._avatar', ['u' => $k->dosen]) --}}
+            @include('mahasiswa._avatar', ['u' => $k->dosen])
           </div>
           <div class="bawah">
             <span><i class="fa-solid fa-book-open"></i> {{ $k->materi_count }} Materi</span>

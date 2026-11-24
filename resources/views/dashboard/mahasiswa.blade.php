@@ -12,12 +12,12 @@
       <i class="fa-solid fa-bell"></i>
       @if ($tugasBelum->count())
         {{ $tugasBelum->count() }} tugas belum dikumpulkan, terdekat
-        {{-- <a href="{{ route('mahasiswa.tugas.show', $tugasBelum->first()) }}"><b>{{ $tugasBelum->first()->judul }}</b></a> --}}
+        <a href="{{ route('mahasiswa.tugas.show', $tugasBelum->first()) }}"><b>{{ $tugasBelum->first()->judul }}</b></a>
         ({{ $tugasBelum->first()->deadline->diffForHumans() }}).
       @endif
       @if ($kuisTersedia->count())
         {{ $kuisTersedia->count() }} quiz sedang dibuka:
-        {{-- <a href="{{ route('mahasiswa.kuis.kerjakan', $kuisTersedia->first()) }}"><b>{{ $kuisTersedia->first()->judul }}</b></a>. --}}
+        <a href="{{ route('mahasiswa.kuis.kerjakan', $kuisTersedia->first()) }}"><b>{{ $kuisTersedia->first()->judul }}</b></a>.
       @endif
     </div>
   @endif
@@ -29,12 +29,12 @@
 
   <div class="m-grid">
     @forelse ($daftarKelas as $k)
-      {{-- <a href="{{ route('mahasiswa.kelas.show', $k) }}" class="m-class"> --}}
+      <a href="{{ route('mahasiswa.kelas.show', $k) }}" class="m-class">
         <div class="atas">
           <span class="kode">{{ $k->nama }}</span>
           <h3>{{ $k->mataKuliah->nama }}</h3>
           <small>{{ $k->dosen->name }}</small>
-          {{-- @include('mahasiswa._avatar', ['u' => $k->dosen]) --}}
+          @include('mahasiswa._avatar', ['u' => $k->dosen])
         </div>
         <div class="bawah">
           <span><i class="fa-solid fa-book-open"></i> {{ $k->materi_count }} Materi</span>
@@ -49,12 +49,12 @@
   {{-- Pop-up Gabung Kelas --}}
   <dialog id="modal-gabung" class="m-modal">
     <h2>Gabung Kelas</h2>
-    {{-- <form method="POST" action="{{ route('mahasiswa.kelas.gabung') }}">
+    <form method="POST" action="{{ route('mahasiswa.kelas.gabung') }}">
       @csrf
       <label for="kode_kelas">Masukkan Kode Kelas</label>
       <input type="text" id="kode_kelas" name="kode_kelas" value="{{ old('kode_kelas') }}" maxlength="10" required autocomplete="off" style="text-transform:uppercase">
       <div class="aksi"><button class="m-btn navy">Gabung</button></div>
-    </form> --}}
+    </form>
   </dialog>
 @endsection
 

@@ -1,0 +1,71 @@
+<?php
+
+namespace App\Http\Controllers\Mahasiswa;
+
+use App\Http\Controllers\Controller;
+use App\Models\Absensi;
+use App\Models\HasilKuis;
+use App\Models\Kelas;
+use App\Models\LogAktivitas;
+use App\Models\Materi;
+use App\Models\Pengumpulan;
+use App\Support\RekapNilai;
+use Illuminate\Http\Request;
+
+class KelasController extends Controller
+{
+    // Daftar kelas sudah ada di dashboard ("Kelas Saya")
+    public function index()
+    {
+        return redirect()->route('mahasiswa.dashboard');
+    }
+
+    // Bergabung ke kelas memakai kode dari dosen
+    public function gabung(Request $request)
+    {
+        $kode = strtoupper(trim($request->validate(['kode_kelas' => 'required|string'])['kode_kelas']));
+        $kelas = Kelas::where('kode_kelas', $kode)->where('status', 'aktif')->first();
+
+        if (! $kelas) {
+            return back()->withErrors(['kode_kelas' => 'Kode kelas tidak ditemukan.'])->withInput();
+        }
+
+        $kelas->mahasiswa()->syncWithoutDetaching([auth()->id()]);
+        LogAktivitas::catat('Bergabung ke kelas ' . $kelas->nama);
+
+        return redirect()->route('mahasiswa.kelas.show', $kelas)->with('sukses', 'Berhasil bergabung ke ' . $kelas->mataKuliah->nama . '.');
+    }
+
+    // Halaman kelas dengan menu samping: Materi, Tugas, Quiz, Absensi, Nilai
+    public function show(Request $request, Kelas $kelas)
+    {
+        $this->pastikanAnggota($kelas);
+        $saya = auth()->id();
+        $tab = in_array($request->get('tab'), ['materi', 'tugas', 'kuis', 'absensi', 'nilai']) ? $request->get('tab') : 'materi';
+        $kelas->load(['mataKuliah', 'dosen', 'pertemuan.sesiAbsensi']);
+
+        $tugas = $kelas->tugas()->get();
+        $kuis = $kelas->kuis()->withCount('soal')->get();
+
+        return view('mahasiswa.kelas.show', [
+            'kelas' => $kelas,
+            'tab' => $tab,
+            'materi' => $kelas->materi()->get(),
+            'tugas' => $tugas,
+            'kuis' => $kuis,
+            'pengumpulan' => Pengumpulan::where('mahasiswa_id', $saya)->whereIn('tugas_id', $tugas->pluck('id'))->get()->keyBy('tugas_id'),
+            'hasilKuis' => HasilKuis::where('mahasiswa_id', $saya)->whereIn('kuis_id', $kuis->pluck('id'))->get()->keyBy('kuis_id'),
+            'absensiSaya' => Absensi::where('mahasiswa_id', $saya)->get()->keyBy('sesi_absensi_id'),
+            'rekap' => $tab === 'nilai' ? collect(RekapNilai::kelas($kelas))->firstWhere('mahasiswa.id', $saya) : null,
+        ]);
+    }
+
+    // Membuka satu materi
+    public function materi(Materi $materi)
+    {
+        $kelas = $materi->kelas;
+        $this->pastikanAnggota($kelas);
+
+        return view('mahasiswa.materi.show', ['materi' => $materi, 'kelas' => $kelas]);
+    }
+}
