@@ -1,5 +1,4 @@
 @extends('layouts.panel')
-
 @php $judulHalaman = ($tugas->exists ? 'Ubah ' : 'Tambah ') . ($tugas->jenis === 'praktikum' ? 'Praktikum' : 'Tugas'); @endphp
 @section('title', $judulHalaman)
 @section('kembali', route('dosen.kelas.show', [$kelas, 'tab' => 'tugas']))

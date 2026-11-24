@@ -1,9 +1,7 @@
 <?php
 
 namespace App\Support;
-
 use Carbon\Carbon;
-
 class Waktu
 {
     // Format singkat seperti di desain: "Hari ini, 10:30", "Kemarin, 01:20", "Sabtu, 23:59", "1 Oktober 2025"

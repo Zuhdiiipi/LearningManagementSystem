@@ -1,5 +1,4 @@
 @extends('layouts.panel')
-
 @section('title', $tugas->judul)
 @section('kembali', route('dosen.kelas.show', [$kelas, 'tab' => 'tugas']))
 

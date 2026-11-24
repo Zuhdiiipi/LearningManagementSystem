@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Http\Controllers\Mahasiswa;
-
 use App\Http\Controllers\Controller;
 use App\Models\LogAktivitas;
 use App\Models\Pengumpulan;
@@ -14,9 +12,8 @@ class TugasController extends Controller
     public function show(Tugas $tugas)
     {
         $this->pastikanAnggota($tugas->kelas);
-
         return view('mahasiswa.tugas.show', [
-            'tugas' => $tugas,
+            'tugas' => $tugas,            
             'kelas' => $tugas->kelas,
             'kumpul' => $tugas->pengumpulan()->where('mahasiswa_id', auth()->id())->first(),
         ]);

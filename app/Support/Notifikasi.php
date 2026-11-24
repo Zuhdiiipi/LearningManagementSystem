@@ -1,12 +1,9 @@
 <?php
-
 namespace App\Support;
-
 use App\Models\LogNotifikasi;
 use App\Notifications\PemberitahuanLms;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-
 class Notifikasi
 {
     // Kirim email ke satu atau banyak pengguna, lalu catat hasilnya di tabel log_notifikasi.

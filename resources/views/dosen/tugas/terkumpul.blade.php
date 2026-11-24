@@ -2,7 +2,6 @@
 
 @section('title', ucfirst($tugas->jenis) . ' Selesai')
 @section('kembali', route('dosen.tugas.show', $tugas))
-
 @section('content')
   <h1 class="m-title">{{ ucfirst($tugas->jenis) }} Selesai</h1>
   <div class="m-box">

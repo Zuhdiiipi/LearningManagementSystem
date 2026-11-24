@@ -1,10 +1,7 @@
 @extends('layouts.panel', ['menuAktif' => 'tugas'])
-
 @section('title', $tugas->judul)
 @section('kembali', route('mahasiswa.kelas.show', [$kelas, 'tab' => 'tugas']))
-
 @php use App\Support\Waktu; $bisaUbah = $kumpul?->nilai === null; @endphp
-
 @section('content')
   <div class="m-detail-head">
     <span class="m-icon"><i class="fa-solid {{ $tugas->jenis === 'tugas' ? 'fa-file-code' : 'fa-clipboard-list' }}"></i></span>

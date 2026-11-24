@@ -10,6 +10,7 @@
       default => '',
   };
 @endphp
+
 <a href="{{ $url }}" class="m-file" @if (($link ?? false) || ($baruTab ?? false)) target="_blank" rel="noopener" @endif>
   <span class="ext {{ $warna }}">@if ($ext === 'LINK')<i class="fa-solid fa-link"></i>@else{{ mb_substr($ext, 0, 4) }}@endif</span>
   <span><b>{{ $judul }}</b><small>{{ $ext === 'LINK' ? 'Buka link' : $ext }}</small></span>
