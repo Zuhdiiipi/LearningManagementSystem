@@ -1,5 +1,4 @@
 @extends('layouts.panel')
-
 @section('title', 'Dashboard Mahasiswa')
 
 @section('content')
@@ -60,7 +59,7 @@
 
 @push('scripts')
   @error('kode_kelas')
-  
+
     <script>document.getElementById('modal-gabung').showModal();</script>
   @enderror
 @endpush
