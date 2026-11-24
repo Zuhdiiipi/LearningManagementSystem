@@ -17,8 +17,8 @@
   </div>
 
   <h2 class="a-section">Kelola</h2>
-  {{-- <a href="{{ route('admin.users.index') }}" class="a-link">Kelola Pengguna</a>
+  <a href="{{ route('admin.users.index') }}" class="a-link">Kelola Pengguna</a>
   <a href="{{ route('admin.kelas.index') }}" class="a-link">Kelola Kelas</a>
   <a href="{{ route('admin.master.index') }}" class="a-link">Data Master (Program Studi, Mata Kuliah, Tahun Ajaran)</a>
-  <a href="{{ route('admin.laporan') }}" class="a-link">Laporan Aktivitas</a> --}}
+  {{-- <a href="{{ route('admin.laporan') }}" class="a-link">Laporan Aktivitas</a> --}}
 @endsection
