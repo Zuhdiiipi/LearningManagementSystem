@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'nim_nidn', 'email', 'password', 'role', 'is_active', 'foto', 'fakultas', 'program_studi', 'angkatan', 'telepon'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -27,6 +27,19 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
+    }
+
+    // Kelas yang diampu (untuk dosen)
+    public function kelasDiampu()
+    {
+        return $this->hasMany(Kelas::class, 'dosen_id');
+    }
+
+    // Kelas yang diikuti (untuk mahasiswa)
+    public function kelasDiikuti()
+    {
+        return $this->belongsToMany(Kelas::class, 'kelas_mahasiswa', 'mahasiswa_id', 'kelas_id')->withTimestamps();
     }
 }
