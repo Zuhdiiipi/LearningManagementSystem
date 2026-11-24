@@ -11,7 +11,6 @@
     <div class="timer" id="timer">--:--:--</div>
     <h1>{{ $kuis->judul }}</h1>
     @if ($kuis->deskripsi) <p class="desk">{{ $kuis->deskripsi }}</p> @endif
-
     @foreach ($soal as $i => $s)
       <div class="m-q">
         <div class="tanya"><span>{{ $i + 1 }}.</span> <span>{{ $s->pertanyaan }}</span></div>

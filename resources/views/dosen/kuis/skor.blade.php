@@ -23,6 +23,7 @@
       </form>
     </span>
   </div>
+  
   <div class="m-box">
     <div class="m-info">
       <span><b>{{ $kuis->judul }}</b> · {{ $kuis->mulai->translatedFormat('j M Y, H:i') }} · {{ $kuis->durasi_menit }} menit</span>

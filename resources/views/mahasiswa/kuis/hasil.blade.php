@@ -37,7 +37,6 @@
         </div>
       </div>
     @endforeach
-
     <div class="kirim"><a href="{{ route('mahasiswa.kelas.show', [$kuis->kelas, 'tab' => 'kuis']) }}" class="m-btn navy">Kembali ke Kelas</a></div>
   </div>
 @endsection

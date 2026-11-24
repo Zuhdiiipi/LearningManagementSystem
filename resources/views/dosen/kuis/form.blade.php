@@ -18,7 +18,6 @@
       <h1 class="m-title">Quiz</h1>
       <button class="m-btn navy" style="font-size:24px;padding:8px 30px">Simpan</button>
     </div>
-
     <div class="m-box form m-form" style="min-height:0">
       <label for="judul">Judul</label>
       <input type="text" id="judul" name="judul" value="{{ old('judul', $kuis->judul) }}" required>

@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\Dosen;
-
 use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\Kuis;
