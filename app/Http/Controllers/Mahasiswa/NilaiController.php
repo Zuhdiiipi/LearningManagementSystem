@@ -1,10 +1,8 @@
 <?php
 
 namespace App\Http\Controllers\Mahasiswa;
-
 use App\Http\Controllers\Controller;
 use App\Support\RekapNilai;
-
 class NilaiController extends Controller
 {
     // Ringkasan nilai di semua kelas yang diikuti
