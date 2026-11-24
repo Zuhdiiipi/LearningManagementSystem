@@ -1,7 +1,5 @@
 @extends('layouts.panel')
-
 @section('title', 'Nilai Saya')
-
 @section('content')
   <h1 class="m-title">Nilai Saya</h1>
   <div class="m-box">
