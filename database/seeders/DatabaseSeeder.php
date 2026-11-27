@@ -19,9 +19,9 @@ class DatabaseSeeder extends Seeder
         $dosen = User::create(['name' => 'Dr. Budi Santoso, M.Kom.', 'nim_nidn' => '0011223344', 'email' => 'dosen@gmail.com', 'password' => 'password', 'role' => 'dosen',
             'fakultas' => 'Teknik', 'program_studi' => 'Informatika', 'telepon' => '081355512345']);
         $mhs = collect([
-            ['Mahasiswa Contoh', 'D0223000', 'mhs@gmail.com'],
+           ['Mahasiswa Contoh', 'D0223000', 'mhs@gmail.com'],
             ['Ratri Pramudita', 'D0223321', 'ratri@gmail.com'],
-            ['Ahmad Suardi', 'D0223011', 'suardi@gmail.com'],
+            ['Ahmad Suardi', 'D0223011', 'suardi@gmail.com'], 
         ])->map(fn ($m) => User::create([
             'name' => $m[0], 'nim_nidn' => $m[1], 'email' => $m[2], 'password' => 'password', 'role' => 'mahasiswa',
             'fakultas' => 'Teknik', 'program_studi' => 'Informatika', 'angkatan' => '2023', 'telepon' => '081234567890',

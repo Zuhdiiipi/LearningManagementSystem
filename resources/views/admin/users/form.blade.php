@@ -1,37 +1,141 @@
 @extends('layouts.panel')
 
-@section('title', $user->exists ? 'Ubah Pengguna' : 'Tambah Pengguna')
+@php
+  $ubah = $user->exists;
+  $judul = $ubah ? 'Ubah Pengguna' : 'Tambah Pengguna';
+
+  $kolom = [
+    ['name', 'Nama Lengkap', 'text', 'name', true, 100],
+    ['nim_nidn', 'NIM / NIDN', 'text', null, false, 20],
+    ['email', 'Email', 'email', 'email', true, null],
+  ];
+
+  $peran = ['admin' => 'Admin', 'dosen' => 'Dosen', 'mahasiswa' => 'Mahasiswa'];
+  $kelasInput = 'mt-1.5 block w-full rounded-lg border bg-white px-3 py-2.5
+                 text-sm text-slate-900 focus:border-[#2b62a8] focus:outline-none
+                 focus:ring-2 focus:ring-[#acd6fb]';
+@endphp
+
+@section('title', $judul)
 
 @section('content')
-  <h1 class="m-title">{{ $user->exists ? 'Ubah Pengguna' : 'Tambah Pengguna' }}</h1>
-  <form method="POST" action="{{ $user->exists ? route('admin.users.update', $user) : route('admin.users.store') }}" class="m-box lebar m-form" style="min-height:0">
+  <h1 class="mb-5 text-2xl font-bold tracking-tight text-[#173d6e] sm:text-3xl">
+    {{ $judul }}
+  </h1>
+
+  <form method="POST"
+        action="{{ $ubah ? route('admin.users.update', $user) : route('admin.users.store') }}"
+        class="rounded-2xl border border-slate-200 bg-white shadow-sm">
     @csrf
-    @if ($user->exists) @method('PUT') @endif
+    @if ($ubah)
+      @method('PUT')
+    @endif
 
-    <label for="name">Nama Lengkap</label>
-    <input type="text" id="name" name="name" value="{{ old('name', $user->name) }}" required>
+    <div class="grid xl:grid-cols-[minmax(0,1fr)_20rem]">
+      <section class="min-w-0 p-4 sm:p-6" aria-labelledby="data-pengguna">
+        <h2 id="data-pengguna" class="text-base font-bold text-[#173d6e]">Data Pengguna</h2>
 
-    <label for="nim_nidn">NIM / NIDN</label>
-    <input type="text" id="nim_nidn" name="nim_nidn" value="{{ old('nim_nidn', $user->nim_nidn) }}">
+        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+          @foreach ($kolom as [$nama, $label, $tipe, $isianOtomatis, $wajib, $batas])
+            <div @class(['min-w-0', 'sm:col-span-2' => $ubah && $nama === 'email'])>
+              <label for="{{ $nama }}" class="block text-sm font-semibold text-[#173d6e]">
+                {{ $label }}
+              </label>
 
-    <label for="email">Email</label>
-    <input type="text" id="email" name="email" value="{{ old('email', $user->email) }}" required>
+              <input id="{{ $nama }}" name="{{ $nama }}" type="{{ $tipe }}"
+                     value="{{ old($nama, $user->{$nama}) }}"
+                     @if ($isianOtomatis) autocomplete="{{ $isianOtomatis }}" @endif
+                     @if ($wajib) required @endif
+                     @if ($batas) maxlength="{{ $batas }}" @endif
+                     @error($nama) aria-invalid="true" aria-describedby="{{ $nama }}-error" @enderror
+                     @class([
+                       $kelasInput,
+                       'border-red-400' => $errors->has($nama),
+                       'border-slate-200' => ! $errors->has($nama),
+                     ])>
 
-    <span class="label">Peran</span>
-    <div class="pilih">
-      @foreach (['admin' => 'Admin', 'dosen' => 'Dosen', 'mahasiswa' => 'Mahasiswa'] as $r => $label)
-        <label><input type="radio" name="role" value="{{ $r }}" @checked(old('role', $user->role ?? 'mahasiswa') === $r)> {{ $label }}</label>
-      @endforeach
+              @error($nama)
+                <p id="{{ $nama }}-error" class="mt-1 text-xs text-red-700">{{ $message }}</p>
+              @enderror
+            </div>
+          @endforeach
+
+          @unless ($ubah)
+            <div class="min-w-0">
+              <label for="password" class="block text-sm font-semibold text-[#173d6e]">
+                Kata sandi <span class="font-normal text-slate-500">(minimal 8 karakter)</span>
+              </label>
+
+              <input id="password" name="password" type="password" autocomplete="new-password"
+                     required minlength="8"
+                     @error('password') aria-invalid="true" aria-describedby="password-error" @enderror
+                     @class([
+                       $kelasInput,
+                       'border-red-400' => $errors->has('password'),
+                       'border-slate-200' => ! $errors->has('password'),
+                     ])>
+
+              @error('password')
+                <p id="password-error" class="mt-1 text-xs text-red-700">{{ $message }}</p>
+              @enderror
+            </div>
+          @endunless
+        </div>
+      </section>
+
+      <section class="min-w-0 border-t border-[#acd6fb] bg-[#f1f7ff] p-4 sm:p-6
+                      xl:rounded-tr-2xl xl:border-t-0 xl:border-l"
+               aria-labelledby="pengaturan-akun">
+        <h2 id="pengaturan-akun" class="text-base font-bold text-[#173d6e]">Pengaturan Akun</h2>
+
+        <fieldset class="mt-4 min-w-0 border-0" @error('role') aria-describedby="role-error" @enderror>
+          <legend class="text-sm font-semibold text-[#173d6e]">Peran</legend>
+
+          <div class="mt-2 grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
+            @foreach ($peran as $nilai => $label)
+              <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200
+                            bg-white px-3 py-2 text-sm font-medium text-[#173d6e]
+                            has-checked:border-[#2b62a8] has-checked:bg-[#dfeffe]">
+                <input type="radio" name="role" value="{{ $nilai }}" required
+                       class="size-4 shrink-0 accent-[#173d6e]"
+                       @checked(old('role', $user->role ?? 'mahasiswa') === $nilai)>
+                {{ $label }}
+              </label>
+            @endforeach
+          </div>
+
+          @error('role')
+            <p id="role-error" class="mt-1 text-xs text-red-700">{{ $message }}</p>
+          @enderror
+        </fieldset>
+
+        @if ($ubah)
+          <div class="mt-4 flex items-center justify-between gap-2 border-t border-[#acd6fb] pt-3 text-sm">
+            <span class="font-medium text-[#4d6a92]">Status akun</span>
+            <span @class([
+              'rounded-full px-2.5 py-1 text-xs font-semibold',
+              'bg-emerald-50 text-emerald-800' => $user->is_active,
+              'bg-slate-100 text-slate-700' => ! $user->is_active,
+            ])>
+              {{ $user->is_active ? 'Aktif' : 'Nonaktif' }}
+            </span>
+          </div>
+        @endif
+      </section>
     </div>
 
-    @unless ($user->exists)
-      <label for="password">Password (minimal 8 karakter)</label>
-      <input type="text" id="password" name="password" value="{{ old('password') }}" required>
-    @endunless
+    <div class="flex flex-wrap justify-end gap-2 border-t border-slate-100 px-4 py-4 sm:px-6">
+      <a href="{{ route('admin.users.index') }}"
+         class="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold
+                text-[#173d6e] hover:bg-[#dfeffe]">
+        Batal
+      </a>
 
-    <div class="bawah tengah">
-      <button class="m-btn navy" style="padding:10px 90px">Simpan</button>
-      <p style="margin-top:12px"><a href="{{ route('admin.users.index') }}" class="m-muted">Batal</a></p>
+      <button type="submit"
+              class="rounded-lg border-0 bg-[#173d6e] px-4 py-2.5 text-sm font-semibold
+                     text-white hover:bg-[#2b62a8]">
+        Simpan
+      </button>
     </div>
   </form>
 @endsection
