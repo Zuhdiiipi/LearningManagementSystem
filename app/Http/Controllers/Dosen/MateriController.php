@@ -10,6 +10,7 @@ use App\Support\Lampiran;
 use App\Support\Notifikasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class MateriController extends Controller
 {
@@ -37,9 +38,8 @@ class MateriController extends Controller
             'deskripsi' => $data['deskripsi'] ?? null,
         ];
 
-        $materi += $files
-            ? ['tipe' => 'file']
-            : ['tipe' => 'link', 'url' => $data['url']];
+        $materi['tipe'] = $files ? 'file' : 'link';
+        $materi['url'] = $data['url'] ?? null;
 
         Lampiran::simpan(
             $files,
@@ -89,33 +89,38 @@ class MateriController extends Controller
         $data = $this->validasi($request, false);
         $files = Lampiran::dariInput($data);
 
-        $ubah = [
-            'judul' => $data['judul'],
-            'deskripsi' => $data['deskripsi'] ?? null,
-        ];
+        Lampiran::simpan($files, 'materi', function (array $atribut) use ($materi, $data) {
+            DB::transaction(function () use ($materi, $data, $atribut) {
+                $terkunci = Materi::query()->lockForUpdate()->findOrFail($materi->id);
+                $url = array_key_exists('url', $data) ? $data['url'] : $terkunci->url;
 
-        if ($files || ! empty($data['url'])) {
-            $ubah += $files
-                ? ['tipe' => 'file', 'url' => null]
-                : ['tipe' => 'link', 'url' => $data['url']];
+                $ubah = [
+                    'judul' => $data['judul'],
+                    'deskripsi' => $data['deskripsi'] ?? null,
+                    'url' => $url,
+                ];
 
-            $lampiranLama = Lampiran::simpan($files, 'materi', function (array $atribut) use ($materi, $ubah) {
-                return DB::transaction(function () use ($materi, $ubah, $atribut) {
-                    $terkunci = Materi::query()->lockForUpdate()->findOrFail($materi->id);
-                    $lama = $terkunci->daftarLampiran();
+                if ($atribut['lampiran']) {
+                    $lampiran = [...$terkunci->daftarLampiran(), ...$atribut['lampiran']];
 
-                    $terkunci->update($ubah + $atribut);
+                    $ubah += [
+                        'tipe' => 'file',
+                        'lampiran' => $lampiran,
+                        'file_path' => $lampiran[0]['path'],
+                        'file_name' => $lampiran[0]['nama'],
+                    ];
+                } elseif ($terkunci->tipe === 'link' && blank($url)) {
+                    throw ValidationException::withMessages([
+                        'url' => 'Isi tautan atau unggah minimal satu file materi.',
+                    ]);
+                }
 
-                    return $lama;
-                });
+                $terkunci->update($ubah);
             });
+        });
 
-            Lampiran::hapus($lampiranLama);
-        } else {
-            $materi->update($ubah);
-        }
-
-        return redirect()->route('dosen.kelas.show', [$materi->kelas, 'tab' => 'materi'])
+        return redirect()
+            ->route('dosen.kelas.show', [$materi->kelas, 'tab' => 'materi'])
             ->with('sukses', 'Materi diperbarui.');
     }
 

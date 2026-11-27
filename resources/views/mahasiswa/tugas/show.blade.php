@@ -9,6 +9,7 @@
     $lewatTenggat = $tugas->sudahLewat();
     $sudahDinilai = $kumpul && $kumpul->nilai !== null;
     $terlambat = $kumpul?->terlambat();
+    $errorFile = $errors->first('files') ?: $errors->first('files.*') ?: $errors->first('file') ?: $errors->first('jumlah_file');
     $formatWaktu = static fn ($waktu) => $waktu?->copy()->locale('id')->translatedFormat('j F Y, H:i') ?? '—';
 
     $panel = 'min-w-0 rounded-xl border border-solid border-slate-200 bg-white p-4 shadow-sm sm:p-5';
@@ -33,9 +34,7 @@
         <h1 class="mt-1 mb-0 text-xl leading-tight font-extrabold tracking-tight sm:text-2xl">
           {{ $tugas->judul }}
         </h1>
-        <p class="mt-1.5 mb-0 text-sm text-slate-700">
-          Diposting {{ $formatWaktu($tugas->created_at) }}
-        </p>
+        <p class="mt-1.5 mb-0 text-sm text-slate-700">Diposting {{ $formatWaktu($tugas->created_at) }}</p>
       </div>
     </header>
 
@@ -48,7 +47,6 @@
         @if ($tugas->file_path)
           <div class="mt-4 border-0 border-t border-solid border-slate-100 pt-4">
             <h3 class="mt-0 mb-2 text-sm font-semibold">Lampiran dosen</h3>
-
             <a href="{{ route('file.tugas', $tugas) }}" class="{{ $tautanFile }} {{ $fokus }}">
               <i class="fa-solid fa-download shrink-0" aria-hidden="true"></i>
               <span class="sr-only">Unduh lampiran</span>
@@ -79,11 +77,17 @@
 
         @if ($kumpul)
           <div class="mt-4 space-y-2">
-            <a href="{{ route('file.pengumpulan', $kumpul) }}" class="{{ $tautanFile }} {{ $fokus }}">
-              <i class="fa-solid fa-download shrink-0" aria-hidden="true"></i>
-              <span class="sr-only">Unduh jawaban</span>
-              <span class="min-w-0 [overflow-wrap:anywhere]">{{ $kumpul->file_name }}</span>
-            </a>
+            <ul class="grid gap-2">
+              @foreach ($kumpul->daftarLampiran() as $indeks => $file)
+                <li>
+                  <a href="{{ route('file.pengumpulan', [$kumpul, 'lampiran' => $indeks]) }}" class="{{ $tautanFile }} {{ $fokus }}">
+                    <i class="fa-solid fa-download shrink-0" aria-hidden="true"></i>
+                    <span class="sr-only">Unduh jawaban</span>
+                    <span class="min-w-0 [overflow-wrap:anywhere]">{{ $file['nama'] }}</span>
+                  </a>
+                </li>
+              @endforeach
+            </ul>
 
             <p class="text-sm text-slate-600">Dikirim {{ $formatWaktu($kumpul->waktuKumpul()) }}</p>
             <p class="text-sm font-semibold {{ $terlambat ? 'text-red-700' : 'text-emerald-700' }}">
@@ -94,19 +98,19 @@
           @if ($sudahDinilai)
             <div class="mt-4 rounded-lg bg-[#dfeffe] p-3">
               <p class="m-0 text-sm font-semibold">Nilai</p>
-              <p class="mt-1 mb-0 text-sm font-semibold"><strong class="text-2xl">{{ $kumpul->nilai }}</strong> / 100</p>
+              <p class="mt-1 mb-0 text-sm font-semibold">
+                <strong class="text-2xl">{{ $kumpul->nilai }}</strong> / 100
+              </p>
 
               @if (filled($kumpul->feedback))
                 <p class="mt-2 mb-0 text-sm font-semibold">Catatan dosen</p>
-                <p class="mt-1 mb-0 text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">
-                  {{ $kumpul->feedback }}
-                </p>
+                <p class="mt-1 mb-0 text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{{ $kumpul->feedback }}</p>
               @endif
             </div>
           @else
             <form method="POST" action="{{ route('mahasiswa.tugas.batal', $tugas) }}" class="mt-4"
                   data-konfirmasi-judul="Batal Kirim"
-                  data-konfirmasi="File jawaban akan dihapus. Kamu bisa mengunggah file lagi.">
+                  data-konfirmasi="Semua file dalam pengiriman ini akan dihapus. Kamu bisa mengirim ulang jawaban.">
               @csrf
               @method('DELETE')
 
@@ -129,26 +133,38 @@
             @csrf
 
             <label for="file-jawaban" class="mb-2 block text-sm font-semibold">File jawaban</label>
-            <input id="file-jawaban" type="file" name="file" required
-                   accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.txt,.png,.jpg,.jpeg"
-                   aria-describedby="format-jawaban{{ $errors->has('file') ? ' error-jawaban' : '' }}"
-                   @if ($errors->has('file')) aria-invalid="true" @endif
-                   class="{{ $fokus }} box-border min-w-0 w-full rounded-lg border border-solid border-slate-300
-                          bg-white p-1.5 font-sans text-sm text-slate-700 aria-invalid:border-red-400
-                          file:mr-2 file:cursor-pointer file:rounded-md file:border-0
-                          file:bg-[#dfeffe] file:px-3 file:py-2 file:font-semibold file:text-[#173d6e]">
+            <input type="hidden" name="jumlah_file">
 
-            @error('file')
-              <p id="error-jawaban" class="mt-2 mb-0 text-sm text-red-700">{{ $message }}</p>
-            @enderror
+            <div id="pilihan-file-jawaban" class="space-y-2">
+              <input id="file-jawaban" type="file" name="files[]" multiple required
+                     accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.txt,.png,.jpg,.jpeg"
+                     aria-describedby="format-jawaban{{ $errorFile ? ' error-jawaban' : '' }}"
+                     @if ($errorFile) aria-invalid="true" @endif
+                     class="{{ $fokus }} box-border min-w-0 w-full rounded-lg border border-solid border-slate-300
+                            bg-white p-1.5 font-sans text-sm text-slate-700 aria-invalid:border-red-400
+                            file:mr-2 file:cursor-pointer file:rounded-md file:border-0
+                            file:bg-[#dfeffe] file:px-3 file:py-2 file:font-semibold file:text-[#173d6e]">
+            </div>
+
+            <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <button id="tambah-file-jawaban" type="button" hidden
+                      class="{{ $fokus }} cursor-pointer rounded-md border border-[#acd6fb] bg-white
+                             px-3 py-2 text-xs font-semibold hover:bg-[#dfeffe]">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i> Tambah pilihan file
+              </button>
+              <p id="status-file-jawaban" class="text-xs text-slate-600" aria-live="polite"></p>
+            </div>
+
+            @if ($errorFile)
+              <p id="error-jawaban" class="mt-2 mb-0 text-sm text-red-700">{{ $errorFile }}</p>
+            @endif
 
             <p id="format-jawaban" class="mt-2 mb-0 text-xs leading-relaxed text-slate-600">
-              Maksimal 20 MB. Format yang diterima mencakup PDF, Word, PowerPoint, Excel, ZIP, RAR, TXT, PNG, dan JPG.
+              Pilih satu atau beberapa file. Maksimal 20 MB per file. Format yang diterima mencakup PDF, Word, PowerPoint, Excel, ZIP, RAR, TXT, PNG, dan JPG.
             </p>
 
             <button type="submit"
-                    class="{{ $tombol }} {{ $fokus }} mt-3 w-full border-0 bg-[#173d6e]
-                           text-white hover:bg-[#2b62a8] sm:w-auto">
+                    class="{{ $tombol }} {{ $fokus }} mt-3 w-full border-0 bg-[#173d6e] text-white hover:bg-[#2b62a8] sm:w-auto">
               <i class="fa-solid fa-upload" aria-hidden="true"></i>
               Kirim jawaban
             </button>
@@ -158,3 +174,58 @@
     </div>
   </div>
 @endsection
+
+@unless ($kumpul)
+  @push('scripts')
+    <script>
+      (() => {
+        const awal = document.getElementById('file-jawaban');
+        const wadah = document.getElementById('pilihan-file-jawaban');
+        const tambah = document.getElementById('tambah-file-jawaban');
+        const status = document.getElementById('status-file-jawaban');
+
+        const hitung = () => {
+          const jumlah = [...wadah.querySelectorAll('input[type="file"]')]
+            .reduce((total, input) => total + input.files.length, 0);
+
+          awal.form.elements.jumlah_file.value = jumlah;
+          awal.required = jumlah === 0;
+          status.textContent = jumlah ? `${jumlah} file dipilih` : '';
+        };
+
+        tambah.addEventListener('click', () => {
+          const baris = document.createElement('div');
+          baris.className = 'flex items-center gap-2';
+
+          const input = awal.cloneNode();
+          input.value = '';
+          input.removeAttribute('id');
+          input.removeAttribute('aria-invalid');
+          input.setAttribute('aria-label', 'File jawaban tambahan');
+          input.required = false;
+
+          const hapus = document.createElement('button');
+          hapus.type = 'button';
+          hapus.className = 'shrink-0 cursor-pointer rounded-md border-0 bg-white p-2 text-xs font-semibold text-red-700 hover:bg-red-50';
+          hapus.textContent = 'Hapus';
+          hapus.setAttribute('aria-label', 'Hapus pilihan file tambahan');
+
+          hapus.addEventListener('click', () => {
+            baris.remove();
+            hitung();
+            tambah.focus();
+          });
+
+          baris.append(input, hapus);
+          wadah.append(baris);
+          input.focus();
+        });
+
+        wadah.addEventListener('change', hitung);
+        awal.form.addEventListener('submit', hitung);
+        tambah.hidden = false;
+        hitung();
+      })();
+    </script>
+  @endpush
+@endunless
