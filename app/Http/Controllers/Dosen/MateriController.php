@@ -163,7 +163,7 @@ class MateriController extends Controller
 
     private function validasi(Request $request, bool $baru): array
     {
-        $aturanFile = 'file|max:51200|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,zip,rar,txt,png,jpg,jpeg,mp4';
+        $aturanFile = 'file|max:512000|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,zip,rar,txt,png,jpg,jpeg,mp4,webm';
 
         return $request->validate([
             'judul' => 'required|max:150',

@@ -18,6 +18,11 @@ class Materi extends Model
         'lampiran' => 'array',
     ];
 
+    private const MIME_VIDEO = [
+        'mp4' => 'video/mp4',
+        'webm' => 'video/webm',
+    ];
+
     public function kelas()
     {
         return $this->belongsTo(Kelas::class);
@@ -28,12 +33,19 @@ class Materi extends Model
         return $this->belongsTo(Pertemuan::class);
     }
 
+
     public function bisaDilihat(?string $namaFile = null): bool
     {
-        $ekstensi = strtolower(
-            pathinfo($namaFile ?? $this->file_name ?? '', PATHINFO_EXTENSION)
-        );
+        $ekstensi = strtolower(pathinfo($namaFile ?? $this->file_name ?? '', PATHINFO_EXTENSION));
 
-        return in_array($ekstensi, ['pdf', 'png', 'jpg', 'jpeg', 'mp4', 'txt'], true);
+        return isset(self::MIME_VIDEO[$ekstensi])
+            || in_array($ekstensi, ['pdf', 'png', 'jpg', 'jpeg', 'txt'], true);
+    }
+
+    public function mimeVideo(string $namaFile): ?string
+    {
+        $ekstensi = strtolower(pathinfo($namaFile, PATHINFO_EXTENSION));
+
+        return self::MIME_VIDEO[$ekstensi] ?? null;
     }
 }

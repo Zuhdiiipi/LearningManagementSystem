@@ -82,7 +82,7 @@
                           file:mr-2 file:rounded-md file:border-0 file:bg-[#dfeffe] file:px-3 file:py-2
                           file:font-semibold file:text-[#173d6e] hover:file:bg-[#acd6fb] {{ $fokus }}">
             <p id="format-file" class="mt-1 text-xs text-slate-600">
-              PDF, Word, PowerPoint, Excel, ZIP, RAR, TXT, PNG, JPG, atau MP4. Maksimal 50 MB per file.
+              PDF, Word, PowerPoint, Excel, ZIP, RAR, TXT, PNG, JPG, atau MP4. Maksimal 500 MB per file.
             </p>
 
             @if ($lampiran)
