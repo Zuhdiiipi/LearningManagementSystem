@@ -1,85 +1,91 @@
 @extends('layouts.panel')
 
+@php
+  $pilihanKelas = [
+    'mata_kuliah_id' => ['Mata Kuliah', $matkul->mapWithKeys(fn ($m) => [$m->id => $m->kode . ' — ' . $m->nama])],
+    'dosen_id' => ['Dosen Pengampu', $dosen->pluck('name', 'id')],
+    'tahun_ajaran_id' => ['Tahun Akademik', $tahun->pluck('nama', 'id')],
+  ];
+  $pengaturan = [
+    'semester' => ['Semester', ['ganjil' => 'Ganjil', 'genap' => 'Genap']],
+    'status' => ['Status Kelas', ['aktif' => 'Aktif', 'draft' => 'Draf']],
+  ];
+
+  $labelKolom = 'mb-1.5 block text-sm font-semibold text-lms-navy';
+  $input = 'box-border block min-h-11 w-full min-w-0 rounded-lg border border-solid border-slate-300
+            bg-white px-3 py-2 text-base text-slate-900 focus:border-lms-blue focus:outline-none
+            focus:ring-2 focus:ring-lms-sky aria-invalid:border-red-400';
+  $opsiRadio = 'flex min-h-10 cursor-pointer items-center gap-2.5 rounded-lg border border-solid
+                border-slate-200 bg-white px-3 py-2 text-sm font-medium text-lms-navy
+                hover:bg-slate-50 has-checked:border-lms-blue has-checked:bg-lms-wash';
+  $tombol = 'inline-flex min-h-11 items-center justify-center rounded-lg px-4 py-2 text-sm
+             font-semibold no-underline focus-visible:outline-2 focus-visible:outline-offset-2
+             focus-visible:outline-lms-blue';
+@endphp
+
 @section('title', 'Ubah Kelas')
 
 @section('content')
-  @php
-    $pilihanKelas = [
-      'mata_kuliah_id' => ['Mata Kuliah', $matkul->mapWithKeys(fn ($m) => [$m->id => $m->kode . ' — ' . $m->nama])],
-      'dosen_id' => ['Dosen Pengampu', $dosen->pluck('name', 'id')],
-      'tahun_ajaran_id' => ['Tahun Akademik', $tahun->pluck('nama', 'id')],
-    ];
+  <div class="mx-auto w-full max-w-xl">
+    <form method="POST" action="{{ route('admin.kelas.update', $kelas) }}"
+          class="overflow-hidden rounded-2xl border border-solid border-slate-200 bg-white shadow-sm">
+      @csrf
+      @method('PUT')
 
-    $pengaturan = [
-      'semester' => ['Semester', ['ganjil' => 'Ganjil', 'genap' => 'Genap']],
-      'status' => ['Status Kelas', ['aktif' => 'Aktif', 'draft' => 'Draft']],
-    ];
+      <header class="flex items-center gap-3 border-b border-solid border-lms-sky bg-lms-wash p-4 sm:px-6">
+        <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-white text-lms-navy">
+          <i class="fa-solid fa-chalkboard-user" aria-hidden="true"></i>
+        </span>
 
-    $input = 'mt-1.5 block w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-slate-900
-              focus:border-[#2b62a8] focus:outline-none focus:ring-2 focus:ring-[#acd6fb]';
-  @endphp
+        <h1 class="m-0 text-xl font-extrabold tracking-tight text-lms-navy sm:text-2xl">
+          Ubah Kelas
+        </h1>
+      </header>
 
-  <h1 class="mb-5 text-2xl font-bold tracking-tight text-[#173d6e] sm:text-3xl">Ubah Kelas</h1>
+      <div class="flex flex-col gap-4 p-4 sm:px-6 sm:py-5">
+        <div class="min-w-0">
+          <label for="nama" class="{{ $labelKolom }}">Nama Kelas</label>
 
-  <form method="POST" action="{{ route('admin.kelas.update', $kelas) }}"
-        class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-    @csrf
-    @method('PUT')
+          <input id="nama" name="nama" type="text" value="{{ old('nama', $kelas->nama) }}"
+                 required maxlength="100" class="{{ $input }}"
+                 @error('nama') aria-invalid="true" aria-describedby="nama-error" @enderror>
 
-    <div class="grid xl:grid-cols-[minmax(0,1fr)_20rem]">
-      <section class="min-w-0 p-4 sm:p-6" aria-labelledby="data-kelas">
-        <h2 id="data-kelas" class="text-base font-bold text-[#173d6e]">Data Kelas</h2>
+          @error('nama')
+            <p id="nama-error" class="mt-1 mb-0 text-xs text-red-700">{{ $message }}</p>
+          @enderror
+        </div>
 
-        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        @foreach ($pilihanKelas as $field => [$label, $opsi])
           <div class="min-w-0">
-            <label for="nama" class="block text-sm font-semibold text-[#173d6e]">Nama Kelas</label>
-            <input id="nama" name="nama" type="text" value="{{ old('nama', $kelas->nama) }}"
-                   required maxlength="100"
-                   @error('nama') aria-invalid="true" aria-describedby="nama-error" @enderror
-                   @class([$input, 'border-red-400' => $errors->has('nama'), 'border-slate-200' => ! $errors->has('nama')])>
+            <label for="{{ $field }}" class="{{ $labelKolom }}">{{ $label }}</label>
 
-            @error('nama')
-              <p id="nama-error" class="mt-1 text-xs text-red-700">{{ $message }}</p>
+            <select id="{{ $field }}" name="{{ $field }}" required class="{{ $input }}"
+                    @error($field) aria-invalid="true" aria-describedby="{{ $field }}-error" @enderror>
+              <option value="">Pilih {{ strtolower($label) }}</option>
+
+              @foreach ($opsi as $id => $teks)
+                <option value="{{ $id }}" @selected((string) old($field, $kelas->{$field}) === (string) $id)>
+                  {{ $teks }}
+                </option>
+              @endforeach
+            </select>
+
+            @error($field)
+              <p id="{{ $field }}-error" class="mt-1 mb-0 text-xs text-red-700">{{ $message }}</p>
             @enderror
           </div>
-
-          @foreach ($pilihanKelas as $field => [$label, $opsi])
-            <div class="min-w-0">
-              <label for="{{ $field }}" class="block text-sm font-semibold text-[#173d6e]">{{ $label }}</label>
-              <select id="{{ $field }}" name="{{ $field }}" required
-                      @error($field) aria-invalid="true" aria-describedby="{{ $field }}-error" @enderror
-                      @class([$input, 'border-red-400' => $errors->has($field), 'border-slate-200' => ! $errors->has($field)])>
-                <option value="">Pilih {{ $label }}</option>
-                @foreach ($opsi as $id => $teks)
-                  <option value="{{ $id }}" @selected((string) old($field, $kelas->{$field}) === (string) $id)>
-                    {{ $teks }}
-                  </option>
-                @endforeach
-              </select>
-
-              @error($field)
-                <p id="{{ $field }}-error" class="mt-1 text-xs text-red-700">{{ $message }}</p>
-              @enderror
-            </div>
-          @endforeach
-        </div>
-      </section>
-
-      <section class="min-w-0 border-t border-[#acd6fb] bg-[#f1f7ff] p-4 sm:p-6 xl:border-t-0 xl:border-l"
-               aria-labelledby="pengaturan-kelas">
-        <h2 id="pengaturan-kelas" class="text-base font-bold text-[#173d6e]">Pengaturan Kelas</h2>
+        @endforeach
 
         @foreach ($pengaturan as $field => [$label, $opsi])
-          <fieldset class="mt-4 min-w-0" @error($field) aria-describedby="{{ $field }}-error" @enderror>
-            <legend class="text-sm font-semibold text-[#173d6e]">{{ $label }}</legend>
+          <fieldset class="m-0 min-w-0 border-0 p-0"
+                    @error($field) aria-describedby="{{ $field }}-error" @enderror>
+            <legend class="{{ $labelKolom }} p-0">{{ $label }}</legend>
 
-            <div class="mt-2 grid grid-cols-2 gap-2">
+            <div class="grid grid-cols-1 gap-2">
               @foreach ($opsi as $nilai => $teks)
-                <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200
-                              bg-white px-2.5 py-2 text-sm font-medium text-[#173d6e]
-                              has-checked:border-[#2b62a8] has-checked:bg-[#dfeffe]">
+                <label class="{{ $opsiRadio }}">
                   <input type="radio" name="{{ $field }}" value="{{ $nilai }}" required
-                         class="size-4 shrink-0 accent-[#173d6e]"
+                         class="size-4 shrink-0 accent-lms-navy"
                          @checked(old($field, $kelas->{$field}) === $nilai)>
                   {{ $teks }}
                 </label>
@@ -87,22 +93,23 @@
             </div>
 
             @error($field)
-              <p id="{{ $field }}-error" class="mt-1 text-xs text-red-700">{{ $message }}</p>
+              <p id="{{ $field }}-error" class="mt-1 mb-0 text-xs text-red-700">{{ $message }}</p>
             @enderror
           </fieldset>
         @endforeach
-      </section>
-    </div>
+      </div>
 
-    <div class="flex flex-wrap justify-end gap-2 border-t border-slate-100 px-4 py-4 sm:px-6">
-      <a href="{{ route('admin.kelas.index') }}"
-         class="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-[#173d6e] hover:bg-[#dfeffe]">
-        Batal
-      </a>
-      <button type="submit"
-              class="rounded-lg bg-[#173d6e] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#2b62a8]">
-        Simpan
-      </button>
-    </div>
-  </form>
+      <div class="flex flex-col gap-1 border-t border-solid border-slate-200 bg-lms-surface px-4 py-3 sm:px-6">
+        <button type="submit"
+                class="{{ $tombol }} w-full cursor-pointer border-0 bg-lms-navy text-white hover:bg-lms-blue">
+          Simpan Perubahan
+        </button>
+
+        <a href="{{ route('admin.kelas.index') }}"
+           class="{{ $tombol }} self-center text-lms-navy hover:bg-lms-wash">
+          Batal
+        </a>
+      </div>
+    </form>
+  </div>
 @endsection
