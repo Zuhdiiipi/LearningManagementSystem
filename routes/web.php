@@ -89,7 +89,6 @@ Route::middleware('auth')->group(function () {
         Route::get('materi/{materi}/ubah', [Dosen\MateriController::class, 'edit'])->name('materi.edit');
         Route::put('materi/{materi}', [Dosen\MateriController::class, 'update'])->name('materi.update');
         Route::delete('materi/{materi}', [Dosen\MateriController::class, 'destroy'])->name('materi.destroy');
-        Route::patch('materi/{materi}/akses', [Dosen\MateriController::class, 'akses'])->name('materi.akses');
 
         // Absensi (satu absensi = satu pertemuan dengan waktu buka dan tutup)
         Route::get('kelas/{kelas}/absensi/tambah', [Dosen\AbsensiController::class, 'create'])->name('absensi.create');

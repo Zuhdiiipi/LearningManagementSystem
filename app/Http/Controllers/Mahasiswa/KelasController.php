@@ -9,8 +9,10 @@ use App\Models\Kelas;
 use App\Models\LogAktivitas;
 use App\Models\Materi;
 use App\Models\Pengumpulan;
+use App\Support\PratinjauExcel;
 use App\Support\RekapNilai;
 use Illuminate\Http\Request;
+use Throwable;
 
 class KelasController extends Controller
 {
@@ -61,11 +63,62 @@ class KelasController extends Controller
     }
 
     // Membuka satu materi
-    public function materi(Materi $materi)
+    public function materi(Request $request, Materi $materi)
     {
         $kelas = $materi->kelas;
         $this->pastikanAnggota($kelas);
 
-        return view('mahasiswa.materi.show', ['materi' => $materi, 'kelas' => $kelas]);
+        $pratinjau = null;
+        $excel = null;
+
+        if ($materi->tipe === 'file' && $request->query('lihat') !== null) {
+            $indeks = filter_var($request->query('lihat'), FILTER_VALIDATE_INT, [
+                'options' => ['min_range' => 0],
+            ]);
+
+            $file = $materi->daftarLampiran()[$indeks] ?? null;
+            abort_if($indeks === false || $file === null, 404);
+
+            $xlsx = strtolower(pathinfo($file['nama'], PATHINFO_EXTENSION)) === 'xlsx';
+            abort_unless($xlsx || $materi->bisaDilihat($file['nama']), 404);
+
+            $pratinjau = [
+                'indeks' => $indeks,
+                'nama' => $file['nama'],
+                'xlsx' => $xlsx,
+            ];
+
+            if ($xlsx) {
+                $lembar = filter_var($request->query('lembar'), FILTER_VALIDATE_INT, [
+                    'options' => ['min_range' => 0],
+                ]);
+
+                $halaman = filter_var($request->query('halaman'), FILTER_VALIDATE_INT, [
+                    'options' => ['min_range' => 1, 'max_range' => 20972],
+                ]) ?: 1;
+
+                $kolom = filter_var($request->query('kolom'), FILTER_VALIDATE_INT, [
+                    'options' => ['min_range' => 1, 'max_range' => 631],
+                ]) ?: 1;
+
+                try {
+                    $excel = PratinjauExcel::baca(
+                        $file['path'],
+                        $lembar === false ? null : $lembar,
+                        $halaman,
+                        $kolom
+                    );
+                } catch (Throwable $error) {
+                    report($error);
+                }
+            }
+        }
+
+        return response()->view(
+            'mahasiswa.materi.show',
+            compact('materi', 'kelas', 'pratinjau', 'excel'),
+            200,
+            ['Cache-Control' => 'private, no-store']
+        );
     }
 }

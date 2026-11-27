@@ -2,12 +2,21 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\MemilikiLampiran;
 use Illuminate\Database\Eloquent\Model;
 
 class Materi extends Model
 {
+    use MemilikiLampiran;
+
     protected $table = 'materi';
+
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'boleh_unduh' => 'boolean',
+        'lampiran' => 'array',
+    ];
 
     public function kelas()
     {
@@ -19,11 +28,12 @@ class Materi extends Model
         return $this->belongsTo(Pertemuan::class);
     }
 
-    protected $casts = ['boleh_unduh' => 'boolean'];
-
-    // File yang bisa dibuka langsung di browser (tanpa diunduh)
-    public function bisaDilihat(): bool
+    public function bisaDilihat(?string $namaFile = null): bool
     {
-        return in_array(strtolower(pathinfo($this->file_name ?? '', PATHINFO_EXTENSION)), ['pdf', 'png', 'jpg', 'jpeg', 'mp4', 'txt']);
+        $ekstensi = strtolower(
+            pathinfo($namaFile ?? $this->file_name ?? '', PATHINFO_EXTENSION)
+        );
+
+        return in_array($ekstensi, ['pdf', 'png', 'jpg', 'jpeg', 'mp4', 'txt'], true);
     }
 }

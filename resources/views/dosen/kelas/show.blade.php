@@ -40,9 +40,7 @@
     <header class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#acd6fb] bg-[#dfeffe] p-4 sm:p-5">
       <div class="min-w-0 [overflow-wrap:anywhere]">
         <p class="text-xs font-semibold text-[#173d6e]">{{ $mataKuliah->kode }}</p>
-        <h1 class="mt-0.5 text-xl font-extrabold tracking-tight text-[#173d6e] sm:text-2xl">
-          {{ $mataKuliah->nama }}
-        </h1>
+        <h1 class="mt-0.5 text-xl font-extrabold tracking-tight text-[#173d6e] sm:text-2xl">{{ $mataKuliah->nama }}</h1>
         <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-700">
           <span>{{ $kelas->nama }}</span>
           <span class="rounded-full bg-white px-2.5 py-1 text-xs font-semibold
@@ -63,34 +61,21 @@
     @if ($tab === 'materi')
       <section class="{{ $panel }}">
         <h2 class="{{ $judulBagian }}">Materi</h2>
-
         <ul class="divide-y divide-slate-100">
           @forelse ($materi as $m)
             <li class="{{ $baris }}">
               <span class="{{ $ikon }}"><i class="fa-solid fa-book-open" aria-hidden="true"></i></span>
               <div class="min-w-0">
-                <a href="{{ route('dosen.materi.show', $m) }}" class="{{ $judulItem }} hover:underline">
-                  {{ $m->judul }}
-                </a>
+                <a href="{{ route('dosen.materi.show', $m) }}" class="{{ $judulItem }} hover:underline">{{ $m->judul }}</a>
                 <p class="{{ $meta }}">
                   {{ Waktu::singkat($m->created_at) }}
-                  · {{ $m->tipe === 'file' ? ($m->boleh_unduh ? 'Boleh diunduh' : 'Hanya dilihat') : 'Tautan' }}
+                  · {{ $m->tipe === 'file' ? 'Lampiran' : 'Tautan' }}
                 </p>
               </div>
-
               <div class="{{ $aksi }}">
-                @if ($m->tipe === 'file')
-                  <a href="{{ route('dosen.materi.show', $m) }}#akses" class="{{ $normal }}"
-                     title="Atur akses" aria-label="Atur akses {{ $m->judul }}">
-                    <i class="fa-solid {{ $m->boleh_unduh ? 'fa-lock-open' : 'fa-lock' }}" aria-hidden="true"></i>
-                  </a>
-                @endif
-
-                <a href="{{ route('dosen.materi.edit', $m) }}" class="{{ $normal }}"
-                   title="Ubah materi" aria-label="Ubah {{ $m->judul }}">
+                <a href="{{ route('dosen.materi.edit', $m) }}" class="{{ $normal }}" title="Ubah materi" aria-label="Ubah {{ $m->judul }}">
                   <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
                 </a>
-
                 <form method="POST" action="{{ route('dosen.materi.destroy', $m) }}"
                       data-konfirmasi-judul="Hapus Materi" data-konfirmasi="Hapus materi {{ $m->judul }}?">
                   @csrf @method('DELETE')
@@ -110,7 +95,6 @@
       @foreach (['tugas' => 'Tugas', 'praktikum' => 'Praktikum'] as $jenis => $label)
         <section class="{{ $panel }}">
           <h2 class="{{ $judulBagian }}">{{ $label }}</h2>
-
           <ul class="divide-y divide-slate-100">
             @forelse ($tugas->where('jenis', $jenis)->sortByDesc('created_at') as $t)
               <li class="{{ $baris }}">
@@ -118,30 +102,24 @@
                   <i class="fa-solid {{ $jenis === 'tugas' ? 'fa-file-code' : 'fa-clipboard-list' }}" aria-hidden="true"></i>
                 </span>
                 <div class="min-w-0">
-                  <a href="{{ route('dosen.tugas.show', $t) }}" class="{{ $judulItem }} hover:underline">
-                    {{ $t->judul }}
-                  </a>
+                  <a href="{{ route('dosen.tugas.show', $t) }}" class="{{ $judulItem }} hover:underline">{{ $t->judul }}</a>
                   <p class="{{ $meta }}">
                     Dibuat {{ Waktu::singkat($t->created_at) }} · Batas {{ Waktu::singkat($t->deadline) }}
                     · {{ $t->pengumpulan_count }}/{{ $anggota->count() }} mengumpulkan
                   </p>
                 </div>
-
                 <div class="{{ $aksi }}">
-                  <a href="{{ route('dosen.tugas.terkumpul', $t) }}" class="{{ $normal }}"
-                     title="Lihat pengumpulan" aria-label="Lihat pengumpulan {{ $t->judul }}">
+                  <a href="{{ route('dosen.tugas.terkumpul', $t) }}" class="{{ $normal }}" title="Lihat pengumpulan" aria-label="Lihat pengumpulan {{ $t->judul }}">
                     <i class="fa-regular fa-eye" aria-hidden="true"></i>
                   </a>
-                  <a href="{{ route('dosen.tugas.edit', $t) }}" class="{{ $normal }}"
-                     title="Ubah {{ strtolower($label) }}" aria-label="Ubah {{ $t->judul }}">
+                  <a href="{{ route('dosen.tugas.edit', $t) }}" class="{{ $normal }}" title="Ubah {{ strtolower($label) }}" aria-label="Ubah {{ $t->judul }}">
                     <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
                   </a>
                   <form method="POST" action="{{ route('dosen.tugas.destroy', $t) }}"
                         data-konfirmasi-judul="Hapus {{ $label }}"
                         data-konfirmasi="Hapus {{ $t->judul }}? Semua jawaban mahasiswa ikut terhapus.">
                     @csrf @method('DELETE')
-                    <button type="submit" class="{{ $hapus }}" title="Hapus {{ strtolower($label) }}"
-                            aria-label="Hapus {{ $t->judul }}">
+                    <button type="submit" class="{{ $hapus }}" title="Hapus {{ strtolower($label) }}" aria-label="Hapus {{ $t->judul }}">
                       <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
                     </button>
                   </form>
@@ -157,11 +135,9 @@
     @elseif ($tab === 'kuis')
       <section class="{{ $panel }}">
         <h2 class="{{ $judulBagian }}">Kuis</h2>
-
         <ul class="divide-y divide-slate-100">
           @forelse ($kuis->sortByDesc('mulai') as $q)
             @php $dibuka = $q->sedangDibuka(); @endphp
-
             <li class="{{ $baris }}">
               <span class="{{ $ikon }}"><i class="fa-regular fa-circle-question" aria-hidden="true"></i></span>
               <div class="min-w-0">
@@ -174,7 +150,6 @@
                   {{ $dibuka ? 'Sedang dibuka sampai ' . $q->selesai->format('H:i') : $q->status() }}
                 </p>
               </div>
-
               <div class="{{ $aksi }}">
                 <form method="POST" action="{{ route($dibuka ? 'dosen.kuis.tutup' : 'dosen.kuis.buka', $q) }}"
                       @if ($dibuka)
@@ -182,16 +157,12 @@
                         data-konfirmasi="Tutup kuis {{ $q->judul }}? Mahasiswa tidak bisa melanjutkan pengerjaan."
                       @endif>
                   @csrf
-                  <button type="submit" class="{{ $dibuka ? $sekunder : $utama }}">
-                    {{ $dibuka ? 'Tutup Sesi' : 'Buka Sesi' }}
-                  </button>
+                  <button type="submit" class="{{ $dibuka ? $sekunder : $utama }}">{{ $dibuka ? 'Tutup Sesi' : 'Buka Sesi' }}</button>
                 </form>
-                <a href="{{ route('dosen.kuis.show', $q) }}" class="{{ $normal }}"
-                   title="Live Score" aria-label="Lihat skor {{ $q->judul }}">
+                <a href="{{ route('dosen.kuis.show', $q) }}" class="{{ $normal }}" title="Live Score" aria-label="Lihat skor {{ $q->judul }}">
                   <i class="fa-regular fa-eye" aria-hidden="true"></i>
                 </a>
-                <a href="{{ route('dosen.kuis.edit', $q) }}" class="{{ $normal }}"
-                   title="Ubah kuis" aria-label="Ubah {{ $q->judul }}">
+                <a href="{{ route('dosen.kuis.edit', $q) }}" class="{{ $normal }}" title="Ubah kuis" aria-label="Ubah {{ $q->judul }}">
                   <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
                 </a>
                 <form method="POST" action="{{ route('dosen.kuis.destroy', $q) }}"
@@ -212,11 +183,9 @@
     @elseif ($tab === 'absensi')
       <section class="{{ $panel }}">
         <h2 class="{{ $judulBagian }}">Absensi</h2>
-
         <ul class="divide-y divide-slate-100">
           @forelse ($kelas->pertemuan->sortBy('nomor') as $p)
             @php $sesi = $p->sesiAbsensi; @endphp
-
             <li class="{{ $baris }}">
               <span class="{{ $ikon }}"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
               <div class="min-w-0">
@@ -225,35 +194,28 @@
                 </a>
                 <p class="{{ $meta }}">
                   {{ $p->tanggal?->translatedFormat('l, j F Y') ?? 'Tanggal belum ditentukan' }}
-                  @if ($sesi)
-                    · {{ $sesi->dibuka_pada->format('H:i') }}–{{ $sesi->ditutup_pada->format('H:i') }}
-                  @endif
+                  @if ($sesi) · {{ $sesi->dibuka_pada->format('H:i') }}–{{ $sesi->ditutup_pada->format('H:i') }} @endif
                 </p>
                 @if ($sesi?->sedangDibuka())
                   <p class="mt-1 text-xs font-semibold text-emerald-800">Sedang dibuka</p>
                 @endif
               </div>
-
               <div class="{{ $aksi }}">
                 @foreach (['naik' => ['fa-arrow-up', 'Naikkan urutan', ! $loop->first], 'turun' => ['fa-arrow-down', 'Turunkan urutan', ! $loop->last]] as $arah => [$ikonArah, $teks, $boleh])
                   <form method="POST" action="{{ route('dosen.absensi.urut', [$p, $arah]) }}">
                     @csrf @method('PATCH')
-                    <button type="submit" class="{{ $normal }}" title="{{ $teks }}"
-                            aria-label="{{ $teks }} pertemuan {{ $p->nomor }}" @disabled(! $boleh)>
+                    <button type="submit" class="{{ $normal }}" title="{{ $teks }}" aria-label="{{ $teks }} pertemuan {{ $p->nomor }}" @disabled(! $boleh)>
                       <i class="fa-solid {{ $ikonArah }}" aria-hidden="true"></i>
                     </button>
                   </form>
                 @endforeach
-
-                <a href="{{ route('dosen.absensi.edit', $p) }}" class="{{ $normal }}"
-                   title="Ubah pertemuan" aria-label="Ubah pertemuan {{ $p->nomor }}">
+                <a href="{{ route('dosen.absensi.edit', $p) }}" class="{{ $normal }}" title="Ubah pertemuan" aria-label="Ubah pertemuan {{ $p->nomor }}">
                   <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
                 </a>
                 <form method="POST" action="{{ route('dosen.absensi.destroy', $p) }}"
                       data-konfirmasi-judul="Hapus Absensi" data-konfirmasi="Hapus absensi pertemuan {{ $p->nomor }}?">
                   @csrf @method('DELETE')
-                  <button type="submit" class="{{ $hapus }}" title="Hapus absensi"
-                          aria-label="Hapus absensi pertemuan {{ $p->nomor }}">
+                  <button type="submit" class="{{ $hapus }}" title="Hapus absensi" aria-label="Hapus absensi pertemuan {{ $p->nomor }}">
                     <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
                   </button>
                 </form>
@@ -275,7 +237,6 @@
         $jumlahKolom = 4 + collect($kelompok)->sum(fn ($daftar) => max($daftar->count(), 1));
         $bobot = RekapNilai::BOBOT;
       @endphp
-
       <section class="{{ $panel }}">
         <h2 id="judul-nilai" class="{{ $judulBagian }}">Rekap Nilai</h2>
         <div class="overflow-x-auto {{ $fokus }}" tabindex="0" role="region" aria-labelledby="judul-nilai">
@@ -285,7 +246,6 @@
               <colgroup span="{{ max($daftar->count(), 1) }}"></colgroup>
             @endforeach
             <colgroup span="3"></colgroup>
-
             <thead class="bg-[#dfeffe] text-[#173d6e]">
               <tr>
                 <th scope="col" rowspan="2" class="text-left">Nama</th>
@@ -299,16 +259,13 @@
               <tr class="border-t border-[#acd6fb]">
                 @foreach ($kelompok as $daftar)
                   @forelse ($daftar as $item)
-                    <th scope="col" class="text-xs" title="{{ $item->judul }}" aria-label="{{ $item->judul }}">
-                      {{ $loop->iteration }}
-                    </th>
+                    <th scope="col" class="text-xs" title="{{ $item->judul }}" aria-label="{{ $item->judul }}">{{ $loop->iteration }}</th>
                   @empty
                     <th scope="col" class="text-xs">—</th>
                   @endforelse
                 @endforeach
               </tr>
             </thead>
-
             <tbody class="divide-y divide-slate-100">
               @forelse ($anggota as $mhs)
                 @php
@@ -316,14 +273,11 @@
                   $nt = $nilaiTugas[$mhs->id] ?? [];
                   $nk = $nilaiKuis[$mhs->id] ?? [];
                 @endphp
-
                 <tr class="hover:bg-slate-50">
                   <th scope="row" class="text-left font-semibold">{{ $mhs->name }}</th>
                   @foreach ($kelompok as $label => $daftar)
                     @forelse ($daftar as $item)
-                      <td>
-                        {{ $label === 'Kuis' ? $angka($nk[$item->id]->skor ?? null) : ($nt[$item->id]->nilai ?? '—') }}
-                      </td>
+                      <td>{{ $label === 'Kuis' ? $angka($nk[$item->id]->skor ?? null) : ($nt[$item->id]->nilai ?? '—') }}</td>
                     @empty
                       <td>—</td>
                     @endforelse
@@ -333,16 +287,11 @@
                   <td class="font-bold text-[#173d6e]">{{ $r['huruf'] ?? '—' }}</td>
                 </tr>
               @empty
-                <tr>
-                  <td colspan="{{ $jumlahKolom }}" class="text-left text-slate-600">
-                    Belum ada mahasiswa di kelas ini.
-                  </td>
-                </tr>
+                <tr><td colspan="{{ $jumlahKolom }}" class="text-left text-slate-600">Belum ada mahasiswa di kelas ini.</td></tr>
               @endforelse
             </tbody>
           </table>
         </div>
-
         <p class="border-t border-slate-100 px-4 py-3 text-sm text-slate-600">
           Tanda — berarti nilai belum tersedia. Bobot nilai akhir menggunakan tugas {{ $bobot['tugas'] }}%,
           praktikum {{ $bobot['praktikum'] }}%, kuis {{ $bobot['kuis'] }}%, dan kehadiran {{ $bobot['kehadiran'] }}%.
@@ -364,14 +313,11 @@
             <tbody class="divide-y divide-slate-100">
               @forelse ($rekap as $r)
                 @php $kurang = $r['total_tugas'] - $r['dikumpulkan']; @endphp
-
                 <tr class="hover:bg-slate-50">
                   <th scope="row" class="font-semibold">{{ $r['mahasiswa']->name }}</th>
                   <td>
                     {{ $r['dikumpulkan'] }}/{{ $r['total_tugas'] }}
-                    @if ($kurang > 0)
-                      <span class="text-red-700">({{ $kurang }} belum)</span>
-                    @endif
+                    @if ($kurang > 0)<span class="text-red-700">({{ $kurang }} belum)</span>@endif
                   </td>
                   <td>{{ $r['kuis_dikerjakan'] }}/{{ $r['total_kuis'] }}</td>
                   <td>{{ $r['hadir'] }}/{{ $r['total_sesi'] }} ({{ $angka($r['kehadiran']) }}%)</td>
@@ -392,9 +338,7 @@
             <li class="flex items-start gap-3 px-4 py-3">
               <span class="{{ $ikon }}"><i class="fa-solid {{ $a['ikon'] }}" aria-hidden="true"></i></span>
               <div class="min-w-0 [overflow-wrap:anywhere]">
-                <p class="text-sm">
-                  <strong class="font-semibold text-[#173d6e]">{{ $a['nama'] }}</strong> {{ $a['teks'] }}
-                </p>
+                <p class="text-sm"><strong class="font-semibold text-[#173d6e]">{{ $a['nama'] }}</strong> {{ $a['teks'] }}</p>
                 <p class="{{ $meta }}">{{ Waktu::singkat($a['waktu']) }}</p>
               </div>
             </li>
@@ -418,14 +362,10 @@
                 <p class="{{ $judulItem }}">{{ $mhs->name }}</p>
                 <p class="{{ $meta }}">{{ $mhs->nim_nidn ?? '—' }}</p>
               </div>
-
-              <form method="POST" action="{{ route('dosen.kelas.keluarkan', [$kelas, $mhs->id]) }}"
-                    class="{{ $aksi }}" data-konfirmasi-judul="Keluarkan Mahasiswa"
-                    data-konfirmasi="Keluarkan {{ $mhs->name }} dari kelas?">
+              <form method="POST" action="{{ route('dosen.kelas.keluarkan', [$kelas, $mhs->id]) }}" class="{{ $aksi }}"
+                    data-konfirmasi-judul="Keluarkan Mahasiswa" data-konfirmasi="Keluarkan {{ $mhs->name }} dari kelas?">
                 @csrf @method('DELETE')
-                <button type="submit" class="{{ $sekunder }}" aria-label="Keluarkan {{ $mhs->name }}">
-                  Keluarkan
-                </button>
+                <button type="submit" class="{{ $sekunder }}" aria-label="Keluarkan {{ $mhs->name }}">Keluarkan</button>
               </form>
             </li>
           @empty
