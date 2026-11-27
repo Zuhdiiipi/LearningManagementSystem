@@ -14,6 +14,29 @@ class PratinjauExcel
     private const BARIS_PER_HALAMAN = 50;
     private const KOLOM_PER_HALAMAN = 26;
 
+
+    public static function dariPermintaan(\Illuminate\Http\Request $request, string $path): ?array
+    {
+        $lembar = filter_var($request->query('lembar'), FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 0],
+        ]);
+
+        $halaman = filter_var($request->query('halaman'), FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 1, 'max_range' => 20972],
+        ]) ?: 1;
+
+        $kolom = filter_var($request->query('kolom'), FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 1, 'max_range' => 631],
+        ]) ?: 1;
+
+        try {
+            return self::baca($path, $lembar === false ? null : $lembar, $halaman, $kolom);
+        } catch (\Throwable $error) {
+            report($error);
+
+            return null;
+        }
+    }
     public static function baca(string $path, ?int $lembar, int $halaman, int $kolom): array
     {
         $opsi = new Options();

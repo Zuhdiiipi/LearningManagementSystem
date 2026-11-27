@@ -10,6 +10,7 @@ use App\Models\Tugas;
 use App\Support\Notifikasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Support\PratinjauLampiran;
 
 class TugasController extends Controller
 {
@@ -70,17 +71,18 @@ class TugasController extends Controller
     }
 
     // Detail tugas: daftar pengumpulan mahasiswa + form penilaian
-    public function show(Tugas $tugas)
+    public function show(Request $request, Tugas $tugas)
     {
         $kelas = $tugas->kelas;
         $this->pastikanPengampu($kelas);
 
-        return view('dosen.tugas.show', [
+        return response()->view('dosen.tugas.show', [
             'tugas' => $tugas->loadCount('pengumpulan'),
-            'kelas' => $kelas,
+            'kelas' => $kelas,  
             'menuAktif' => 'tugas',
             'jumlahMahasiswa' => $kelas->mahasiswa()->count(),
-        ]);
+            'pratinjau' => PratinjauLampiran::untukTugas($request, $tugas),
+        ], 200, ['Cache-Control' => 'private, no-store']);
     }
 
     public function update(Request $request, Tugas $tugas)

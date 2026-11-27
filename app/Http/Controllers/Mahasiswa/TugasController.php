@@ -9,20 +9,22 @@ use App\Support\Lampiran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Support\PratinjauLampiran;
 
 class TugasController extends Controller
 {
-    public function show(Tugas $tugas)
+    public function show(Request $request, Tugas $tugas)
     {
         $this->pastikanAnggota($tugas->kelas);
 
-        return view('mahasiswa.tugas.show', [
+        return response()->view('mahasiswa.tugas.show', [
             'tugas' => $tugas,
             'kelas' => $tugas->kelas,
             'kumpul' => $tugas->pengumpulan()
                 ->where('mahasiswa_id', auth()->id())
                 ->first(),
-        ]);
+            'pratinjau' => PratinjauLampiran::untukTugas($request, $tugas),
+        ], 200, ['Cache-Control' => 'private, no-store']);
     }
 
     public function kumpul(Request $request, Tugas $tugas)

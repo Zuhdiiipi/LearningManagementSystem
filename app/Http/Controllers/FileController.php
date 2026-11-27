@@ -7,6 +7,8 @@ use App\Models\Pengumpulan;
 use App\Models\Tugas;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
+use App\Support\PratinjauLampiran;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 
 class FileController extends Controller
 {
@@ -28,9 +30,40 @@ class FileController extends Controller
     public function tugas(Tugas $tugas)
     {
         $this->bolehAksesKelas($tugas->kelas);
-        abort_unless($tugas->file_path, 404);
 
-        return Storage::download($tugas->file_path, $tugas->file_name);
+        abort_unless($tugas->file_path && Storage::exists($tugas->file_path), 404);
+
+        return $this->responsLampiran(
+            $tugas->file_path,
+            $tugas->file_name ?: basename($tugas->file_path),
+            request()->boolean('lihat') && ! request()->boolean('unduh')
+        );
+    }
+
+    private function responsLampiran(string $path, string $nama, bool $lihat)
+    {
+        $headers = ['Cache-Control' => 'private, no-store'];
+        $mime = $lihat ? PratinjauLampiran::mime($nama) : null;
+
+        if ($mime === null) {
+            return Storage::download($path, $nama, $headers);
+        }
+
+        $headers += [
+            'Content-Type' => $mime,
+            'X-Content-Type-Options' => 'nosniff',
+        ];
+
+        if (
+            str_starts_with($mime, 'video/')
+            && Storage::getAdapter() instanceof LocalFilesystemAdapter
+        ) {
+            return response()->file(Storage::path($path), $headers)
+                ->setPrivate()
+                ->setContentDisposition('inline', $nama);
+        }
+
+        return Storage::response($path, $nama, $headers);
     }
 
     public function pengumpulan(Pengumpulan $pengumpulan)
