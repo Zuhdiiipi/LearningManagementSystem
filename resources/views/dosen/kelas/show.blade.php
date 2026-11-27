@@ -235,8 +235,46 @@
           'Kuis' => $kuis->values(),
         ];
         $jumlahKolom = 4 + collect($kelompok)->sum(fn ($daftar) => max($daftar->count(), 1));
-        $bobot = RekapNilai::BOBOT;
+        $bobot = RekapNilai::bobot($kelas);
       @endphp
+
+      <section class="{{ $panel }}" aria-labelledby="judul-bobot">
+        <h2 id="judul-bobot" class="{{ $judulBagian }}">Bobot Penilaian</h2>
+        <form method="POST" action="{{ route('dosen.kelas.bobot.update', $kelas) }}" class="px-4 py-4">
+          @csrf
+          @method('PATCH')
+
+          <p id="petunjuk-bobot" class="mb-3 text-sm text-slate-600">
+            Isi persentase tiap komponen hingga totalnya 100%. Gunakan 0% untuk komponen yang tidak dihitung.
+          </p>
+
+          @error('bobot')
+            <p class="mb-3 text-sm font-semibold text-red-700">{{ $message }}</p>
+          @enderror
+
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            @foreach (['tugas' => 'Tugas', 'praktikum' => 'Praktikum', 'kuis' => 'Kuis', 'kehadiran' => 'Kehadiran'] as $komponen => $label)
+              @php $isian = old('bobot.' . $komponen, $bobot[$komponen]); @endphp
+              <div class="min-w-0">
+                <label for="bobot-{{ $komponen }}" class="mb-1 block text-sm font-semibold text-[#173d6e]">
+                  {{ $label }} (%)
+                </label>
+                <input type="number" id="bobot-{{ $komponen }}" name="bobot[{{ $komponen }}]"
+                       value="{{ is_scalar($isian) ? $isian : '' }}" min="0" max="100" step="1" required
+                       aria-describedby="petunjuk-bobot{{ $errors->has('bobot.' . $komponen) ? ' galat-bobot-' . $komponen : '' }}"
+                       @error('bobot.' . $komponen) aria-invalid="true" @enderror
+                       class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 aria-invalid:border-red-500 {{ $fokus }}">
+                @error('bobot.' . $komponen)
+                  <p id="galat-bobot-{{ $komponen }}" class="mt-1 text-sm text-red-700">{{ $message }}</p>
+                @enderror
+              </div>
+            @endforeach
+          </div>
+
+          <button type="submit" class="{{ $utama }} mt-4">Simpan Bobot</button>
+        </form>
+      </section>
+
       <section class="{{ $panel }}">
         <h2 id="judul-nilai" class="{{ $judulBagian }}">Rekap Nilai</h2>
         <div class="overflow-x-auto {{ $fokus }}" tabindex="0" role="region" aria-labelledby="judul-nilai">
@@ -282,7 +320,7 @@
                       <td>—</td>
                     @endforelse
                   @endforeach
-                  <td>{{ $r ? $angka($r['kehadiran']) . '%' : '—' }}</td>
+                  <td>{{ $r ? $angka($r['kehadiran']) . '/100' : '—' }}</td>
                   <td class="font-bold text-[#173d6e]">{{ $angka($r['akhir'] ?? null) }}</td>
                   <td class="font-bold text-[#173d6e]">{{ $r['huruf'] ?? '—' }}</td>
                 </tr>
@@ -293,8 +331,7 @@
           </table>
         </div>
         <p class="border-t border-slate-100 px-4 py-3 text-sm text-slate-600">
-          Tanda — berarti nilai belum tersedia. Bobot nilai akhir menggunakan tugas {{ $bobot['tugas'] }}%,
-          praktikum {{ $bobot['praktikum'] }}%, kuis {{ $bobot['kuis'] }}%, dan kehadiran {{ $bobot['kehadiran'] }}%.
+          Tanda — berarti nilai belum tersedia.
         </p>
       </section>
 

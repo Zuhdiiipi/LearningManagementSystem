@@ -16,7 +16,7 @@
               <td>{{ $d['rekap']['tugas'] ?? 0 }}</td>
               <td>{{ $d['rekap']['praktikum'] ?? 0 }}</td>
               <td>{{ $d['rekap']['kuis'] ?? 0 }}</td>
-              <td>{{ $d['rekap']['kehadiran'] ?? 0 }}%</td>
+              <td>{{ $d['rekap']['kehadiran'] ?? 0 }}/100</td>
               <td><b>{{ $d['rekap']['akhir'] ?? 0 }}</b></td>
               <td><span class="badge">{{ $d['rekap']['huruf'] ?? '-' }}</span></td>
               <td><a href="{{ route('mahasiswa.kelas.show', [$d['kelas'], 'tab' => 'nilai']) }}" class="m-btn navy small">Detail</a></td>

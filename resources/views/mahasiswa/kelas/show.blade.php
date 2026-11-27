@@ -30,7 +30,6 @@
     $fokus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2b62a8]';
     $tombol = 'min-h-10 cursor-pointer rounded-lg px-3 py-2 font-sans text-sm font-semibold';
     $utama = 'border-0 bg-[#173d6e] text-white hover:bg-[#2b62a8]';
-
     $formatNilai = static fn ($nilai) => rtrim(rtrim(number_format($nilai, 2, ',', '.'), '0'), ',');
     $formatWaktu = static fn ($waktu) => $waktu?->copy()->locale('id')->translatedFormat('j M Y, H:i') ?? '—';
   @endphp
@@ -50,8 +49,7 @@
     </header>
 
     @if ($lihatNilai)
-      @php $bobot = \App\Support\RekapNilai::BOBOT; @endphp
-
+      @php $bobot = \App\Support\RekapNilai::bobot($kelas); @endphp
       <section aria-labelledby="judul-nilai" class="{{ $panel }} grid sm:grid-cols-[auto_minmax(0,1fr)]">
         <div class="bg-[#173d6e] px-5 py-4 text-white">
           <h2 id="judul-nilai" class="m-0 text-sm font-semibold text-[#acd6fb]">Nilai akhir</h2>
@@ -73,9 +71,7 @@
               </div>
             @endforeach
           </dl>
-          <p class="{{ $detail }}">
-            Hadir pada {{ $rekap['hadir'] ?? 0 }} dari {{ $rekap['total_sesi'] ?? 0 }} sesi absensi.
-          </p>
+          <p class="{{ $detail }}">Hadir pada {{ $rekap['hadir'] ?? 0 }} dari {{ $rekap['total_sesi'] ?? 0 }} sesi absensi.</p>
         </div>
       </section>
     @endif
@@ -83,7 +79,6 @@
     @if ($tab === 'materi')
       <section aria-labelledby="judul-materi" class="{{ $panel }}">
         <h2 id="judul-materi" class="{{ $kepala }}">Materi</h2>
-
         <div class="{{ $daftar }}">
           @forelse ($materi as $m)
             <a href="{{ route('mahasiswa.materi.show', $m) }}" class="{{ $baris }} {{ $tautan }}">
@@ -106,7 +101,6 @@
         @foreach ($jenisTugas as $jenis => $label)
           @php
             $daftarTugas = $tugas->where('jenis', $jenis);
-
             if (! $lihatNilai) {
                 $daftarTugas = $daftarTugas->sortByDesc('created_at');
             }
@@ -114,7 +108,6 @@
 
           <section aria-labelledby="judul-{{ $jenis }}" class="{{ $panel }}">
             <h2 id="judul-{{ $jenis }}" class="{{ $kepala }}">{{ $label }}</h2>
-
             <div class="{{ $daftar }}">
               @forelse ($daftarTugas as $t)
                 @php
@@ -126,7 +119,6 @@
                           : [$biru, $formatNilai($jawaban?->nilai ?? 0) . ' / 100'];
                   } else {
                       $jawaban?->setRelation('tugas', $t);
-
                       [$warna, $status] = match (true) {
                           $jawaban?->terlambat() === true => [$merah, 'Terlambat'],
                           $jawaban !== null => [$hijau, 'Terkumpul'],
@@ -138,18 +130,14 @@
 
                 <a href="{{ route('mahasiswa.tugas.show', $t) }}" class="{{ $baris }} {{ $tautan }}">
                   <span class="{{ $ikon }}">
-                    <i class="fa-solid {{ $jenis === 'tugas' ? 'fa-file-lines' : 'fa-clipboard-list' }}"
-                       aria-hidden="true"></i>
+                    <i class="fa-solid {{ $jenis === 'tugas' ? 'fa-file-lines' : 'fa-clipboard-list' }}" aria-hidden="true"></i>
                   </span>
-
                   <div class="{{ $isi }}">
                     <h3 class="{{ $judul }}">{{ $t->judul }}</h3>
                     <p class="{{ $detail }}">
-                      {{ Waktu::singkat($t->created_at?->copy()->locale('id')) }}
-                      · Tenggat {{ $formatWaktu($t->deadline) }}
+                      {{ Waktu::singkat($t->created_at?->copy()->locale('id')) }} · Tenggat {{ $formatWaktu($t->deadline) }}
                     </p>
                   </div>
-
                   <span class="{{ $kanan }} {{ $badge }} {{ $warna }}">{{ $status }}</span>
                 </a>
               @empty
@@ -164,7 +152,6 @@
     @if ($tab === 'kuis' || $lihatNilai)
       <section aria-labelledby="judul-kuis" class="{{ $panel }}">
         <h2 id="judul-kuis" class="{{ $kepala }}">Kuis</h2>
-
         <div class="{{ $daftar }}">
           @forelse ($lihatNilai ? $kuis : $kuis->sortByDesc('mulai') as $q)
             @php
@@ -172,10 +159,8 @@
               $dibuka = $q->sedangDibuka();
               $skor = $formatNilai($hasil?->skor ?? 0) . ' / 100';
             @endphp
-
             <article class="{{ $baris }} relative">
               <span class="{{ $ikon }}"><i class="fa-regular fa-circle-question" aria-hidden="true"></i></span>
-
               <div class="{{ $isi }}">
                 <h3 class="{{ $judul }}">
                   @if ($lihatNilai)
@@ -188,11 +173,7 @@
                     </a>
                   @endif
                 </h3>
-
-                <p class="{{ $detail }}">
-                  {{ $formatWaktu($q->mulai) }} · {{ $q->durasi_menit }} menit · {{ $q->soal_count }} soal
-                </p>
-
+                <p class="{{ $detail }}">{{ $formatWaktu($q->mulai) }} · {{ $q->durasi_menit }} menit · {{ $q->soal_count }} soal</p>
                 @if (! $lihatNilai && ! $hasil && $dibuka)
                   <p class="{{ $detail }}">Ditutup {{ $formatWaktu($q->selesai) }}</p>
                 @endif
@@ -214,7 +195,6 @@
     @if ($tab === 'absensi')
       <section aria-labelledby="judul-absensi" class="{{ $panel }}">
         <h2 id="judul-absensi" class="{{ $kepala }}">Absensi</h2>
-
         <div class="{{ $daftar }}">
           @forelse ($kelas->pertemuan->sortByDesc('nomor') as $p)
             @php
@@ -224,7 +204,6 @@
               $tanggal = $p->tanggal?->copy()->locale('id')->translatedFormat('l, j F Y') ?? 'Tanggal belum ditentukan';
               $waktu = $sesi ? $sesi->dibuka_pada->format('H:i') . '–' . $sesi->ditutup_pada->format('H:i') : null;
               $statusAbsen = $catatan?->status ?? ($sesi?->sudahDitutup() ? 'alpa' : 'belum dibuka');
-
               $warnaAbsen = match ($statusAbsen) {
                   'hadir' => $hijau,
                   'alpa' => $merah,
@@ -235,7 +214,6 @@
 
             <article class="{{ $baris }}">
               <span class="{{ $ikon }}"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
-
               <div class="{{ $isi }}">
                 <h3 class="{{ $judul }}">Pertemuan {{ $p->nomor }}</h3>
                 @if ($p->judul)
@@ -269,7 +247,6 @@
                        bg-white p-0 text-[#173d6e] shadow-xl backdrop:bg-slate-900/45">
           <div class="p-5">
             <h2 id="judul-absen-{{ $p->id }}" class="m-0 text-lg font-bold">Tandai kehadiran</h2>
-
             <div class="mt-3 rounded-lg bg-[#f4f7fb] p-3">
               <p class="m-0 font-semibold [overflow-wrap:anywhere]">{{ $kelas->mataKuliah->nama }}</p>
               <p class="{{ $detail }}">Pertemuan {{ $p->nomor }} · {{ $kelas->nama }}</p>
@@ -280,12 +257,10 @@
             <div class="mt-4 flex flex-wrap justify-end gap-2">
               <form method="dialog">
                 <button type="submit" autofocus
-                        class="{{ $tombol }} {{ $fokus }} border border-solid border-slate-300
-                               bg-white text-[#173d6e] hover:bg-[#f4f7fb]">
+                        class="{{ $tombol }} {{ $fokus }} border border-solid border-slate-300 bg-white text-[#173d6e] hover:bg-[#f4f7fb]">
                   Batal
                 </button>
               </form>
-
               <form method="POST" action="{{ route('mahasiswa.absensi.hadir', $p) }}">
                 @csrf
                 <button type="submit" class="{{ $tombol }} {{ $utama }} {{ $fokus }}">Tandai hadir</button>

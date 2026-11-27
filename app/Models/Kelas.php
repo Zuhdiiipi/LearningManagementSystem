@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 class Kelas extends Model
 {
     protected $table = 'kelas';
+    protected $casts = ['bobot_penilaian' => 'array'];
     protected $guarded = ['id'];
 
     public function mataKuliah()

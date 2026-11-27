@@ -3,21 +3,22 @@
 namespace App\Http\Controllers\Dosen;
 
 use App\Http\Controllers\Controller;
-use App\Models\HasilKuis;
-use App\Models\SesiAbsensi;
 use App\Models\Absensi;
+use App\Models\HasilKuis;
 use App\Models\Kelas;
 use App\Models\LogAktivitas;
 use App\Models\MataKuliah;
 use App\Models\Pengumpulan;
 use App\Models\ProgramStudi;
+use App\Models\SesiAbsensi;
 use App\Models\TahunAjaran;
 use App\Support\RekapNilai;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class KelasController extends Controller
 {
-    // Daftar kelas ditampilkan di dashboard ("Kelas Saya")
+    // Daftar kelas ditampilkan di dashboard
     public function index()
     {
         return redirect()->route('dosen.dashboard');
@@ -65,11 +66,13 @@ class KelasController extends Controller
         return redirect()->route('dosen.dashboard')->with('sukses', 'Kelas dihapus.');
     }
 
-    // Halaman kelas dengan menu samping
     public function show(Request $request, Kelas $kelas)
     {
         $this->pastikanPengampu($kelas);
-        $tab = in_array($request->get('tab'), ['materi', 'tugas', 'kuis', 'absensi', 'nilai', 'progres', 'anggota']) ? $request->get('tab') : 'materi';
+        $tab = in_array($request->get('tab'), ['materi', 'tugas', 'kuis', 'absensi', 'nilai', 'progres', 'anggota'])
+            ? $request->get('tab')
+            : 'materi';
+
         $kelas->load(['mataKuliah', 'pertemuan.sesiAbsensi']);
         $tugas = $kelas->tugas()->withCount('pengumpulan')->get();
         $kuis = $kelas->kuis()->withCount(['soal', 'hasil'])->get();
@@ -83,16 +86,14 @@ class KelasController extends Controller
             'anggota' => $kelas->mahasiswa()->orderBy('name')->get(),
         ];
 
-        // Rekap nilai: nilai tiap tugas, praktikum, dan quiz per mahasiswa
         if ($tab === 'nilai') {
             $data['rekap'] = collect(RekapNilai::kelas($kelas))->keyBy('mahasiswa.id');
             $data['nilaiTugas'] = Pengumpulan::whereIn('tugas_id', $tugas->pluck('id'))->get()
-                ->groupBy('mahasiswa_id')->map(fn ($g) => $g->keyBy('tugas_id'));
+                ->groupBy('mahasiswa_id')->map(fn($g) => $g->keyBy('tugas_id'));
             $data['nilaiKuis'] = HasilKuis::whereIn('kuis_id', $kuis->pluck('id'))->get()
-                ->groupBy('mahasiswa_id')->map(fn ($g) => $g->keyBy('kuis_id'));
+                ->groupBy('mahasiswa_id')->map(fn($g) => $g->keyBy('kuis_id'));
         }
 
-        // Progres belajar mahasiswa + aktivitas terbaru di kelas (FR-25, FR-26)
         if ($tab === 'progres') {
             $data['rekap'] = RekapNilai::kelas($kelas);
             $data['aktivitas'] = $this->aktivitasKelas($kelas, $tugas, $kuis);
@@ -101,28 +102,74 @@ class KelasController extends Controller
         return view('dosen.kelas.show', $data);
     }
 
-    // Gabungan aktivitas mahasiswa di kelas: kumpul tugas, kerjakan quiz, absensi
     private function aktivitasKelas(Kelas $kelas, $tugas, $kuis)
     {
         $daftar = collect();
+
         foreach (Pengumpulan::with(['mahasiswa', 'tugas'])->whereIn('tugas_id', $tugas->pluck('id'))->latest('updated_at')->take(30)->get() as $p) {
-            $daftar->push(['waktu' => $p->updated_at, 'nama' => $p->mahasiswa->name, 'ikon' => 'fa-file-arrow-up',
-                'teks' => 'mengumpulkan ' . $p->tugas->jenis . ' "' . $p->tugas->judul . '"' . ($p->nilai !== null ? ' (nilai ' . $p->nilai . ')' : '')]);
+            $daftar->push([
+                'waktu' => $p->updated_at,
+                'nama' => $p->mahasiswa->name,
+                'ikon' => 'fa-file-arrow-up',
+                'teks' => 'mengumpulkan ' . $p->tugas->jenis . ' "' . $p->tugas->judul . '"'
+                    . ($p->nilai !== null ? ' (nilai ' . $p->nilai . ')' : ''),
+            ]);
         }
+
         foreach (HasilKuis::with(['mahasiswa', 'kuis'])->whereIn('kuis_id', $kuis->pluck('id'))->latest()->take(30)->get() as $h) {
-            $daftar->push(['waktu' => $h->created_at, 'nama' => $h->mahasiswa->name, 'ikon' => 'fa-circle-question',
-                'teks' => 'mengerjakan "' . $h->kuis->judul . '" (skor ' . (float) $h->skor . ')']);
+            $daftar->push([
+                'waktu' => $h->created_at,
+                'nama' => $h->mahasiswa->name,
+                'ikon' => 'fa-circle-question',
+                'teks' => 'mengerjakan "' . $h->kuis->judul . '" (skor ' . (float) $h->skor . ')',
+            ]);
         }
+
         $idSesi = SesiAbsensi::whereIn('pertemuan_id', $kelas->pertemuan->pluck('id'))->pluck('id');
         foreach (Absensi::with(['mahasiswa', 'sesiAbsensi.pertemuan'])->whereIn('sesi_absensi_id', $idSesi)->latest('updated_at')->take(30)->get() as $a) {
-            $daftar->push(['waktu' => $a->updated_at, 'nama' => $a->mahasiswa->name, 'ikon' => 'fa-calendar-check',
-                'teks' => 'tercatat ' . $a->status . ' di pertemuan ' . $a->sesiAbsensi->pertemuan->nomor]);
+            $daftar->push([
+                'waktu' => $a->updated_at,
+                'nama' => $a->mahasiswa->name,
+                'ikon' => 'fa-calendar-check',
+                'teks' => 'tercatat ' . $a->status . ' di pertemuan ' . $a->sesiAbsensi->pertemuan->nomor,
+            ]);
         }
 
         return $daftar->sortByDesc('waktu')->take(30)->values();
     }
 
-    // Unduh rekap nilai dalam format CSV (bisa dibuka di Excel)
+    public function updateBobot(Request $request, Kelas $kelas)
+    {
+        $this->pastikanPengampu($kelas);
+
+        $bobot = $request->validate([
+            'bobot' => 'required|array:tugas,praktikum,kuis,kehadiran',
+            'bobot.tugas' => 'required|integer|between:0,100',
+            'bobot.praktikum' => 'required|integer|between:0,100',
+            'bobot.kuis' => 'required|integer|between:0,100',
+            'bobot.kehadiran' => 'required|integer|between:0,100',
+        ], [
+            'bobot.required' => 'Isi bobot semua komponen penilaian.',
+            'bobot.array' => 'Komponen bobot penilaian tidak valid.',
+            'bobot.*.required' => 'Isi bobot komponen ini.',
+            'bobot.*.integer' => 'Bobot harus berupa angka bulat.',
+            'bobot.*.between' => 'Bobot harus antara 0 dan 100.',
+        ])['bobot'];
+
+        $bobot = array_map('intval', $bobot);
+
+        if (array_sum($bobot) !== 100) {
+            throw ValidationException::withMessages([
+                'bobot' => 'Total bobot semua komponen harus tepat 100%.',
+            ]);
+        }
+
+        $kelas->update(['bobot_penilaian' => $bobot]);
+
+        return redirect()->route('dosen.kelas.show', [$kelas, 'tab' => 'nilai'])
+            ->with('sukses', 'Bobot penilaian disimpan.');
+    }
+
     public function exportNilai(Kelas $kelas)
     {
         $this->pastikanPengampu($kelas);
@@ -132,15 +179,24 @@ class KelasController extends Controller
         return response()->streamDownload(function () use ($rekap) {
             $out = fopen('php://output', 'w');
             fputcsv($out, ['NIM', 'Nama', 'Tugas', 'Praktikum', 'Quiz', 'Kehadiran (%)', 'Nilai Akhir', 'Huruf'], ';');
+
             foreach ($rekap as $r) {
-                fputcsv($out, [$r['mahasiswa']->nim_nidn, $r['mahasiswa']->name, $r['tugas'], $r['praktikum'],
-                    $r['kuis'], $r['kehadiran'], $r['akhir'], $r['huruf']], ';');
+                fputcsv($out, [
+                    $r['mahasiswa']->nim_nidn,
+                    $r['mahasiswa']->name,
+                    $r['tugas'],
+                    $r['praktikum'],
+                    $r['kuis'],
+                    $r['kehadiran'],
+                    $r['akhir'],
+                    $r['huruf'],
+                ], ';');
             }
+
             fclose($out);
         }, $namaFile, ['Content-Type' => 'text/csv']);
     }
 
-    // Keluarkan mahasiswa dari kelas
     public function keluarkan(Kelas $kelas, int $mahasiswa)
     {
         $this->pastikanPengampu($kelas);
@@ -154,8 +210,8 @@ class KelasController extends Controller
         return $request->validate([
             'nama' => 'required|max:100',
             'mata_kuliah_id' => 'required|exists:mata_kuliah,id',
-            'semester' => 'required|in:ganjil,genap',
             'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id',
+            'semester' => 'required|in:ganjil,genap',
             'status' => 'required|in:aktif,draft',
         ], [
             'mata_kuliah_id.required' => 'Pilih mata kuliah.',
